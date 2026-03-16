@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>time·track</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+/*═══════════════════════════════════════════════
+  RESET & DESIGN TOKENS
+═══════════════════════════════════════════════*/
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F0F4FF;--surface:#FFFFFF;--surface-2:#EAF0FD;--border:#D3DEFF;
+  --primary:#2C5FE4;--primary-dark:#1A3DB8;--primary-muted:#E6ECFD;
+  --accent:#5B8AF5;--text:#111827;--text-muted:#6B7A9E;
+  --success:#22C55E;--warning:#F59E0B;--danger:#EF4444;
+  --r-card:12px;--r-input:8px;
+  --shadow:0 2px 8px rgba(0,0,0,.06);--shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+html,body,#root{height:100%}
+body{font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
+.mono{font-family:'DM Mono',monospace}
+
+/*═══════════════════════════════════════════════
+  LAYOUT
+═══════════════════════════════════════════════*/
+.shell{display:grid;grid-template-columns:240px 1fr;grid-template-rows:64px 1fr;min-height:100vh}
+
+/*═══════════════════════════════════════════════
+  SIDEBAR
+═══════════════════════════════════════════════*/
+.sidebar{grid-row:1/-1;background:linear-gradient(180deg,#1E3A8A 0%,#172D6E 100%);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden}
+.sb-logo{height:64px;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.08);gap:10px}
+.sb-logo-mark{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-logo-text{color:#fff;font-size:16px;font-weight:700;letter-spacing:-.03em}
+.sb-logo-text .dot{color:var(--accent)}
+.sb-nav{padding:16px 0;flex:1}
+.sb-section{color:rgba(255,255,255,.3);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:12px 20px 4px}
+.sb-item{display:flex;align-items:center;gap:11px;height:40px;padding:0 16px;color:rgba(255,255,255,.65);cursor:pointer;transition:all 150ms;border-left:3px solid transparent;font-size:14px;font-weight:500;user-select:none}
+.sb-item:hover{color:#fff;background:rgba(255,255,255,.07)}
+.sb-item.active{color:#fff;background:rgba(255,255,255,.14);border-left-color:var(--accent)}
+.sb-item svg{flex-shrink:0;opacity:.8}
+.sb-item.active svg{opacity:1}
+.sb-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:12px}
+.sb-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.sb-name{color:#fff;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-role{color:rgba(255,255,255,.45);font-size:11px;margin-top:1px}
+
+/*═══════════════════════════════════════════════
+  TOPBAR
+═══════════════════════════════════════════════*/
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.05);display:flex;align-items:center;padding:0 32px;gap:16px}
+.tb-bc{display:flex;align-items:center;gap:8px;flex:1}
+.tb-bc-root{font-size:14px;font-weight:500;color:var(--text-muted);cursor:pointer;transition:color 150ms}
+.tb-bc-root:hover{color:var(--primary)}
+.tb-bc-sep{color:var(--border);font-size:16px}
+.tb-bc-cur{font-size:14px;font-weight:600;color:var(--text)}
+.tb-right{display:flex;align-items:center;gap:12px}
+.tb-date{font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted);background:var(--bg);padding:4px 10px;border-radius:6px;border:1px solid var(--border)}
+.tb-icon-btn{width:34px;height:34px;border-radius:var(--r-input);display:flex;align-items:center;justify-content:center;background:none;border:1px solid var(--border);cursor:pointer;color:var(--text-muted);transition:all 150ms}
+.tb-icon-btn:hover{background:var(--surface-2);color:var(--text)}
+.tb-role-chip{padding:3px 10px;background:var(--primary-muted);color:var(--primary);border-radius:99px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+
+/*═══════════════════════════════════════════════
+  MAIN CONTENT
+═══════════════════════════════════════════════*/
+.main{padding:32px;overflow-y:auto;background:var(--bg)}
+
+/*═══════════════════════════════════════════════
+  BUTTONS
+═══════════════════════════════════════════════*/
+.btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 18px;border-radius:var(--r-input);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all 150ms;white-space:nowrap}
+.btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px);box-shadow:0 4px 12px rgba(44,95,228,.3)}
+.btn-secondary{background:var(--primary-muted);color:var(--primary)}
+.btn-secondary:hover{background:#d4e0fc}
+.btn-ghost{background:transparent;color:var(--text-muted);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--surface-2);color:var(--text);border-color:var(--primary)}
+.btn-success-soft{background:rgba(34,197,94,.1);color:#16A34A;border:1px solid rgba(34,197,94,.25)}
+.btn-success-soft:hover{background:rgba(34,197,94,.18)}
+.btn-danger-soft{background:rgba(239,68,68,.08);color:var(--danger);border:1px solid rgba(239,68,68,.25)}
+.btn-danger-soft:hover{background:rgba(239,68,68,.16)}
+.btn-sm{height:30px;padding:0 12px;font-size:13px}
+.btn-xs{height:26px;padding:0 10px;font-size:12px;border-radius:6px}
+.btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+
+/*═══════════════════════════════════════════════
+  BADGES
+═══════════════════════════════════════════════*/
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.badge-draft{background:#E5E7EB;color:#6B7280}
+.badge-submitted{background:#FEF3C7;color:#D97706}
+.badge-approved{background:#DCFCE7;color:#16A34A}
+.badge-rejected{background:#FEE2E2;color:#DC2626}
+.badge-processed{background:#EDE9FE;color:#7C3AED}
+.badge-count{background:var(--danger);color:#fff;padding:2px 8px;font-size:12px;font-weight:700;border-radius:99px;letter-spacing:0}
+
+/*═══════════════════════════════════════════════
+  CARDS
+═══════════════════════════════════════════════*/
+.card{background:var(--surface);border-radius:var(--r-card);box-shadow:var(--shadow);overflow:hidden}
+
+/*═══════════════════════════════════════════════
+  MODAL & TOAST
+═══════════════════════════════════════════════*/
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:1000;animation:fadeIn 150ms ease}
+.modal{background:var(--surface);border-radius:var(--r-card);box-shadow:0 20px 60px rgba(0,0,0,.2);width:100%;max-width:480px;margin:16px;animation:slideUp 150ms ease}
+.modal-hd{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:16px;font-weight:700}
+.modal-body{padding:20px 24px}
+.modal-ft{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.modal-x{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:none;background:none;cursor:pointer;color:var(--text-muted);border-radius:6px;font-size:18px;transition:background 150ms}
+.modal-x:hover{background:var(--surface-2)}
+.toasts{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:2000;pointer-events:none}
+.toast{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:var(--surface);border-radius:var(--r-input);box-shadow:0 4px 20px rgba(0,0,0,.15);min-width:280px;max-width:360px;animation:slideLeft 200ms ease;font-size:13px;pointer-events:all}
+.t-success{border-left:4px solid var(--success)}.t-error{border-left:4px solid var(--danger)}.t-warning{border-left:4px solid var(--warning)}.t-info{border-left:4px solid var(--primary)}
+.t-title{font-weight:600;color:var(--text)}.t-msg{color:var(--text-muted);font-size:12px;margin-top:2px}
+
+/*═══════════════════════════════════════════════
+  ── APPROVALS INBOX ──
+═══════════════════════════════════════════════*/
+/* Page header */
+.ap-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap}
+.ap-title-row{display:flex;align-items:center;gap:12px}
+.ap-title{font-size:28px;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.ap-subtitle{color:var(--text-muted);font-size:14px;margin-top:4px}
+
+/* Filter bar */
+.filter-bar{background:var(--surface);border-radius:var(--r-card);box-shadow:var(--shadow);padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-select{height:34px;padding:0 32px 0 12px;border:1px solid var(--border);border-radius:var(--r-input);background:var(--surface);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);cursor:pointer;outline:none;transition:all 150ms;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7A9E' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;min-width:150px}
+.filter-select:hover{border-color:var(--primary)}
+.filter-select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(44,95,228,.1)}
+.filter-divider{width:1px;height:24px;background:var(--border);margin:0 4px}
+
+/* Status tabs */
+.status-tabs{display:flex;gap:2px;background:var(--bg);border-radius:var(--r-input);padding:3px;border:1px solid var(--border)}
+.status-tab{height:28px;padding:0 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--text-muted);transition:all 150ms;display:flex;align-items:center;gap:5px}
+.status-tab:hover{color:var(--text);background:rgba(255,255,255,.6)}
+.status-tab.active{background:var(--surface);color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.tab-count{font-size:10px;font-weight:700;background:var(--primary-muted);color:var(--primary);padding:1px 5px;border-radius:99px}
+.status-tab.active .tab-count{background:var(--primary);color:#fff}
+
+/* Sort controls */
+.sort-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.sort-btn{height:28px;padding:0 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);transition:all 150ms;display:flex;align-items:center;gap:4px}
+.sort-btn:hover{border-color:var(--primary);color:var(--primary)}
+.sort-btn.sorted{border-color:var(--primary);color:var(--primary);background:var(--primary-muted)}
+.sort-label{font-size:12px;color:var(--text-muted);font-weight:600;margin-right:4px}
+
+/* Bulk toolbar */
+.bulk-toolbar{background:var(--primary);border-radius:var(--r-input);padding:10px 16px;display:flex;align-items:center;gap:12px;margin-bottom:12px;animation:slideDown 180ms ease;flex-wrap:wrap}
+.bulk-info{color:#fff;font-size:14px;font-weight:600;flex:1}
+.bulk-info span{background:rgba(255,255,255,.2);border-radius:99px;padding:2px 8px;font-family:'DM Mono',monospace;font-size:12px;margin-left:6px}
+.bulk-approve{height:32px;padding:0 16px;border-radius:6px;font-size:13px;font-weight:700;border:2px solid rgba(255,255,255,.6);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;transition:all 150ms;display:flex;align-items:center;gap:6px}
+.bulk-approve:hover{background:rgba(255,255,255,.22);border-color:#fff}
+.bulk-reject{height:32px;padding:0 16px;border-radius:6px;font-size:13px;font-weight:700;border:2px solid rgba(239,68,68,.5);background:rgba(239,68,68,.15);color:#fca5a5;cursor:pointer;transition:all 150ms;display:flex;align-items:center;gap:6px}
+.bulk-reject:hover{background:rgba(239,68,68,.28);border-color:#f87171}
+.bulk-clear{height:28px;width:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:none;background:rgba(255,255,255,.1);cursor:pointer;color:rgba(255,255,255,.7);transition:all 150ms}
+.bulk-clear:hover{background:rgba(255,255,255,.2);color:#fff}
+
+/* Table */
+.ap-table-wrap{background:var(--surface);border-radius:var(--r-card);box-shadow:var(--shadow);overflow:hidden}
+.ap-table{width:100%;border-collapse:collapse;min-width:900px}
+.ap-thead th{padding:10px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);background:var(--bg);border-bottom:1px solid var(--border);white-space:nowrap;text-align:left}
+.ap-thead th.th-center{text-align:center}
+.ap-thead th.th-right{text-align:right;padding-right:20px}
+.ap-thead th.th-check{width:44px;text-align:center}
+.ap-thead th.th-actions{width:160px;text-align:right;padding-right:20px}
+
+/* Rows */
+.ap-row{transition:background 130ms;cursor:pointer;border-bottom:1px solid var(--border)}
+.ap-row:last-child{border-bottom:none}
+.ap-row:hover{background:var(--surface-2)}
+.ap-row.expanded{background:#F8FAFF}
+.ap-row.selected{background:#EEF3FD}
+.ap-row.selected:hover{background:#E6EDFC}
+.ap-row td{padding:14px 16px;vertical-align:middle;font-size:14px}
+.ap-row td.td-check{text-align:center;cursor:default}
+.ap-row td.td-actions{text-align:right;padding-right:20px}
+
+/* Employee cell */
+.emp-cell{display:flex;align-items:center;gap:10px}
+.emp-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.emp-name{font-weight:600;color:var(--text);cursor:pointer;transition:color 130ms}
+.emp-name:hover{color:var(--primary);text-decoration:underline;text-decoration-style:dotted}
+.emp-role{font-size:11px;color:var(--text-muted);margin-top:1px}
+
+/* Projects list in cell */
+.proj-tags{display:flex;flex-wrap:wrap;gap:4px}
+.proj-tag{padding:2px 8px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;font-size:11px;font-weight:600;color:var(--text-muted);white-space:nowrap}
+
+/* Hours cell */
+.hours-cell{font-family:'DM Mono',monospace;font-size:15px;font-weight:500}
+.hours-high{color:var(--warning)}
+.hours-ok{color:var(--text)}
+
+/* Submitted cell */
+.sub-time{font-size:13px;color:var(--text-muted)}
+.sub-time strong{color:var(--text);font-weight:600}
+
+/* Quick actions */
+.qa-btns{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+
+/* Checkbox */
+.cb{width:16px;height:16px;accent-color:var(--primary);cursor:pointer;flex-shrink:0}
+
+/* Expand chevron */
+.expand-icon{transition:transform 200ms ease;color:var(--text-muted);flex-shrink:0}
+.expand-icon.open{transform:rotate(180deg)}
+
+/*═══════════════════════════════════════════════
+  EXPANDED ROW
+═══════════════════════════════════════════════*/
+.expand-row td{padding:0;border-bottom:1px solid var(--border)}
+.expand-inner{padding:16px 20px 20px 64px;background:#F5F8FF;border-top:1px solid var(--border);animation:expandIn 180ms ease}
+.expand-grid-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:10px}
+.day-breakdown{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.day-chip{min-width:64px;padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;text-align:center}
+.day-chip-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:4px}
+.day-chip-val{font-family:'DM Mono',monospace;font-size:15px;font-weight:500;color:var(--text)}
+.day-chip-val.warn{color:var(--warning)}
+.day-chip-val.danger{color:var(--danger)}
+.day-chip-val.zero{color:var(--border)}
+.project-breakdown{margin-bottom:16px}
+.proj-break-row{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--border)}
+.proj-break-row:last-child{border-bottom:none}
+.proj-break-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.proj-break-name{font-size:13px;font-weight:600;flex:1;color:var(--text)}
+.proj-break-task{font-size:11px;color:var(--text-muted);margin-top:1px}
+.proj-break-h{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--text-muted)}
+.comment-area{margin-top:4px}
+.comment-label{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.comment-input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r-input);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--surface);outline:none;resize:vertical;min-height:72px;transition:border 150ms}
+.comment-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(44,95,228,.1)}
+.expand-actions{display:flex;gap:8px;margin-top:12px;align-items:center;justify-content:flex-end}
+
+/*═══════════════════════════════════════════════
+  EMPTY STATE
+═══════════════════════════════════════════════*/
+.empty-state{padding:64px 32px;text-align:center}
+.empty-icon{width:56px;height:56px;background:var(--surface-2);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--text-muted)}
+.empty-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px}
+.empty-sub{font-size:14px;color:var(--text-muted)}
+
+/*═══════════════════════════════════════════════
+  DASHBOARD (Employee — Screen 2)
+═══════════════════════════════════════════════*/
+.welcome-strip{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;gap:16px;flex-wrap:wrap}
+.welcome-av{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;background:linear-gradient(135deg,#2C5FE4 0%,#5B8AF5 100%);box-shadow:0 4px 12px rgba(44,95,228,.3);flex-shrink:0}
+.welcome-title{font-size:26px;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.welcome-title span{color:var(--primary)}
+.welcome-sub{font-size:13px;color:var(--text-muted);margin-bottom:2px}
+.cwc{background:linear-gradient(135deg,#1E3A8A 0%,#2C5FE4 60%,#5B8AF5 100%);border-radius:var(--r-card);padding:28px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:24px;box-shadow:0 8px 24px rgba(44,95,228,.25);position:relative;overflow:hidden}
+.cwc::before{content:'';position:absolute;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.04);top:-80px;right:-40px;pointer-events:none}
+.cwc-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.55);margin-bottom:6px}
+.cwc-week{font-size:18px;font-weight:700;color:#fff;margin-bottom:12px}
+.cwc-big{font-family:'DM Mono',monospace;font-size:48px;font-weight:500;color:#fff;line-height:1}
+.cwc-unit{font-size:18px;color:rgba(255,255,255,.6);padding-bottom:6px}
+.cwc-prog{width:100%;max-width:320px;margin-bottom:10px}
+.cwc-track{height:6px;background:rgba(255,255,255,.18);border-radius:99px;overflow:hidden}
+.cwc-fill{height:100%;background:rgba(255,255,255,.85);border-radius:99px}
+.cwc-plabels{display:flex;justify-content:space-between;margin-top:5px}
+.cwc-plabels span{font-size:11px;color:rgba(255,255,255,.5);font-family:'DM Mono',monospace}
+.cwc-cta{height:42px;padding:0 22px;font-size:14px;font-weight:700;background:#fff;color:var(--primary);border:none;border-radius:var(--r-input);cursor:pointer;transition:all 150ms;display:flex;align-items:center;gap:8px}
+.cwc-cta:hover{background:var(--primary-muted);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.cwc-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:99px;padding:4px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.9)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+.stat-card{background:var(--surface);border-radius:var(--r-card);padding:20px 24px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden;transition:transform 150ms,box-shadow 150ms}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.stat-acc{position:absolute;top:0;left:0;width:3px;height:100%}
+.stat-label{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em}
+.stat-val{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;color:var(--text);line-height:1}
+.stat-sub{font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:4px}
+.delta{font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px}
+.d-up{background:#DCFCE7;color:#16A34A}.d-down{background:#FEE2E2;color:#DC2626}.d-neu{background:var(--surface-2);color:var(--text-muted)}
+.dash-lower{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+.tbl-card{background:var(--surface);border-radius:var(--r-card);box-shadow:var(--shadow);overflow:hidden}
+.tbl-card-hd{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.tbl-card-title{font-size:15px;font-weight:700;color:var(--text)}
+table.rt{width:100%;border-collapse:collapse}
+.rt thead th{padding:10px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);background:var(--bg);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+.rt tbody tr{border-bottom:1px solid var(--border);transition:background 130ms}
+.rt tbody tr:last-child{border-bottom:none}
+.rt tbody tr:hover{background:var(--surface-2)}
+.rt td{padding:14px 16px;font-size:14px;color:var(--text);vertical-align:middle}
+.rt td:last-child{text-align:right}
+.link-btn{background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--primary);padding:4px 8px;border-radius:5px;transition:background 130ms}
+.link-btn:hover{background:var(--primary-muted)}
+.side-stack{display:flex;flex-direction:column;gap:16px}
+.side-card{background:var(--surface);border-radius:var(--r-card);box-shadow:var(--shadow);overflow:hidden}
+.sc-hd{padding:14px 20px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.07em}
+.sc-body{padding:12px 16px}
+.qa-item{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:8px;cursor:pointer;transition:background 130ms;margin-bottom:2px}
+.qa-item:hover{background:var(--surface-2)}
+.qa-ic{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qa-lbl{font-size:14px;font-weight:600;color:var(--text)}
+.qa-sub{font-size:12px;color:var(--text-muted);margin-top:1px}
+.proj-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)}
+.proj-row:last-child{border-bottom:none}
+.proj-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.proj-name{font-size:13px;font-weight:600;color:var(--text)}
+.proj-task{font-size:11px;color:var(--text-muted);margin-top:1px}
+.proj-h{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--text-muted)}
+
+/*═══════════════════════════════════════════════
+  TIMESHEET ENTRY (Screen 1)
+═══════════════════════════════════════════════*/
+.pg-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap}
+.pg-title{font-size:28px;font-weight:700;color:var(--text);line-height:1.2}
+.pg-sub{color:var(--text-muted);font-size:14px;margin-top:4px}
+.hd-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.wk-sel{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-input);overflow:hidden;box-shadow:var(--shadow)}
+.wk-nav{width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;color:var(--text-muted);transition:all 150ms}
+.wk-nav:hover{background:var(--surface-2);color:var(--text)}
+.wk-nav:disabled{opacity:.3;cursor:not-allowed}
+.wk-lbl{padding:0 14px;font-size:12px;font-weight:600;color:var(--text);border-left:1px solid var(--border);border-right:1px solid var(--border);height:36px;display:flex;align-items:center;white-space:nowrap;font-family:'DM Mono',monospace}
+.st-bar{display:flex;align-items:center;gap:16px;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.st-bar-item{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted)}
+.reject-callout{margin:12px 20px 0;padding:14px 16px;background:#FFF5F5;border:1px solid #FED7D7;border-radius:var(--r-input);border-left:4px solid var(--danger)}
+.rc-head{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--danger);margin-bottom:6px}
+.rc-text{font-size:13px;color:#7F1D1D;line-height:1.5}
+.rc-meta{font-size:11px;color:var(--text-muted);margin-top:6px}
+.lock-banner{margin:12px 20px 0;padding:12px 16px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:var(--r-input);border-left:4px solid var(--success);display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;color:#166534}
+.val-banner{margin:12px 20px 0;padding:10px 14px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.3);border-radius:6px;font-size:13px;color:#7F1D1D;display:flex;align-items:flex-start;gap:8px}
+/* ── Entry table ── */
+.entry-grid{overflow-x:auto}
+.et{width:100%;min-width:900px;border-collapse:collapse;table-layout:fixed}
+/* Sticky header */
+.et-head-sticky{position:sticky;top:0;z-index:10}
+.et-head-totals th{background:var(--surface);border-bottom:2px solid var(--border);padding:10px 6px;vertical-align:middle}
+.et-head-totals th.c-proj{padding-left:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);text-align:left}
+.et-head-totals th.c-day-h{border-left:1px solid var(--border);text-align:center}
+.et-head-totals th.c-tot-h{border-left:1px solid var(--border);text-align:center}
+.et-head-totals th.c-rm-h{width:36px}
+.eht-date{font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:.01em}
+.eht-dow{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-top:1px}
+.eht-h{font-family:'DM Mono',monospace;font-size:16px;font-weight:700;margin-top:3px}
+/* Column widths */
+.et colgroup .col-proj{width:20%}
+.et colgroup .col-day{width:10%}
+.et colgroup .col-tot{width:68px}
+.et colgroup .col-rm{width:36px}
+/* Data rows */
+.et-row{transition:background 150ms}
+.et-row:hover{background:var(--surface-2)}
+.et-row td{padding:10px 6px;border-bottom:1px solid var(--border);vertical-align:top}
+.et-row td:first-child{padding-left:20px;vertical-align:middle}
+.et-row td:last-child{padding-right:10px;vertical-align:middle}
+/* Day cell — hours + note stacked */
+.day-cell{display:flex;flex-direction:column;align-items:stretch;gap:5px}
+.ti{width:100%;height:36px;text-align:center;border:1px solid transparent;border-radius:6px;
+  background:transparent;font-family:'DM Mono',monospace;font-size:14px;color:var(--text);
+  outline:none;transition:all 150ms;display:block}
+.ti::placeholder{color:#C8D5F5}
+.ti:hover{border-color:var(--border);background:var(--surface-2)}
+.ti:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(44,95,228,.12)}
+.ti.hv{background:rgba(44,95,228,.04)}
+.ti.wn{background:rgba(245,158,11,.08);color:var(--warning)}
+.ti.dv{background:rgba(239,68,68,.08);color:var(--danger)}
+.ti:disabled{opacity:.4;cursor:not-allowed;background:transparent}
+/* Always-visible day note */
+.day-note-ta{
+  width:100%;min-height:52px;padding:5px 7px;
+  border:1px solid var(--border);border-radius:6px;
+  font-family:'DM Sans',sans-serif;font-size:11.5px;color:var(--text);
+  background:var(--surface);outline:none;resize:none;
+  transition:border 140ms;line-height:1.4;box-sizing:border-box;
+}
+.day-note-ta:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(44,95,228,.1)}
+.day-note-ta:disabled{background:var(--surface-2);color:var(--text-muted);cursor:not-allowed;resize:none}
+.day-note-ta::placeholder{color:var(--border)}
+.row-sel{width:100%;height:36px;padding:0 24px 0 8px;border:1px solid transparent;border-radius:6px;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);cursor:pointer;outline:none;transition:all 150ms;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7A9E' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.row-sel:hover{border-color:var(--border);background-color:var(--surface-2)}
+.row-sel:focus{border-color:var(--primary);background-color:#fff;box-shadow:0 0 0 3px rgba(44,95,228,.12);outline:none}
+.row-sel:disabled{opacity:.5;cursor:not-allowed}
+.rm-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:none;border:none;cursor:pointer;color:var(--text-muted);transition:all 150ms;margin:0 auto;opacity:.4}
+.et-row:hover .rm-btn{opacity:1}
+.rm-btn:hover{background:rgba(239,68,68,.1)!important;color:var(--danger)!important}
+.add-row-area{padding:12px 20px;border-top:1px dashed var(--border)}
+.rt-cell{font-family:'DM Mono',monospace;font-size:14px;font-weight:600;text-align:right;padding-right:4px;white-space:nowrap}
+.h-green{color:var(--success)}.h-amber{color:var(--warning)}.h-red{color:var(--danger)}
+
+/*═══════════════════════════════════════════════
+  REVIEW SCREEN (Screen 4 — stub)
+═══════════════════════════════════════════════*/
+.review-header{background:var(--surface);border-radius:var(--r-card);box-shadow:var(--shadow);padding:24px 28px;margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.review-emp-block{display:flex;align-items:center;gap:14px}
+.review-av{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0}
+.review-name{font-size:20px;font-weight:700;color:var(--text);letter-spacing:-.01em}
+.review-meta{font-size:13px;color:var(--text-muted);margin-top:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.review-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.review-grid-ro{background:var(--surface);border-radius:var(--r-card);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px}
+.reject-form{background:var(--surface);border-radius:var(--r-card);box-shadow:var(--shadow);padding:20px 24px}
+.reject-form-title{font-size:14px;font-weight:700;color:var(--danger);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.audit-trail{background:var(--surface);border-radius:var(--r-card);box-shadow:var(--shadow);overflow:hidden}
+.audit-hd{padding:16px 24px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted)}
+.audit-item{display:flex;gap:16px;padding:14px 24px;border-bottom:1px solid var(--border);position:relative}
+.audit-item:last-child{border-bottom:none}
+.audit-line{position:absolute;left:35px;top:0;bottom:0;width:2px;background:var(--border)}
+.audit-item:first-child .audit-line{top:24px}
+.audit-item:last-child .audit-line{bottom:50%}
+.audit-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:3px;position:relative;z-index:1;border:2px solid var(--surface)}
+.audit-ts{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);width:140px;flex-shrink:0;padding-top:1px}
+.audit-actor{font-size:13px;font-weight:600;color:var(--text)}
+.audit-action{font-size:13px;color:var(--text-muted);margin-top:2px}
+.audit-comment{margin-top:6px;padding:8px 12px;background:var(--surface-2);border-radius:6px;font-size:12px;color:var(--text-muted);font-style:italic;border-left:3px solid var(--border)}
+
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes slideLeft{from{transform:translateX(32px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideDown{from{transform:translateY(-8px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes expandIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes screenIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.screen-in{animation:screenIn 220ms ease}
+
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#b0c0e0}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useRef, useCallback, useMemo } = React;
+
+/*────────────────────────────────────────────────
+  CONSTANTS
+────────────────────────────────────────────────*/
+const PROJECTS = ["Apollo Rebrand","Platform Migration","Q3 Marketing Campaign","Internal Tooling"];
+const TASKS    = ["Design","Development","QA","Meetings","Documentation","Research"];
+const DAYS     = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+const EMPLOYEE_USER = { name:"Sarah Chen",    first:"Sarah",  initials:"SC", role:"Employee",        color:"#2C5FE4" };
+const PM_USER       = { name:"James Okonkwo", first:"James",  initials:"JO", role:"Project Manager", color:"#7C3AED" };
+
+const TODAY = "Thursday, March 5, 2026";
+
+// Approvals inbox mock data
+const APPROVALS_DATA = [
+  {
+    id:1, empName:"Sarah Chen", empInitials:"SC", empColor:"#2C5FE4",
+    week:"Mar 3–9, 2026", projects:["Apollo Rebrand","Platform Migration"],
+    totalH:38, submittedAgo:"2 days ago", status:"SUBMITTED",
+    days:[7,8,6,7,8,1,1],
+    breakdown:[{proj:"Apollo Rebrand",task:"Design",h:22,color:"#2C5FE4"},{proj:"Platform Migration",task:"Development",h:16,color:"#5B8AF5"}],
+  },
+  {
+    id:2, empName:"Marcus Williams", empInitials:"MW", empColor:"#16A34A",
+    week:"Mar 3–9, 2026", projects:["Q3 Marketing Campaign"],
+    totalH:42, submittedAgo:"1 day ago", status:"SUBMITTED",
+    days:[8,9,8,9,8,0,0],
+    breakdown:[{proj:"Q3 Marketing Campaign",task:"Research",h:20,color:"#22C55E"},{proj:"Q3 Marketing Campaign",task:"Documentation",h:22,color:"#16A34A"}],
+  },
+  {
+    id:3, empName:"Priya Patel", empInitials:"PP", empColor:"#D97706",
+    week:"Feb 24–Mar 2, 2026", projects:["Internal Tooling"],
+    totalH:36, submittedAgo:"5 days ago", status:"SUBMITTED",
+    days:[7,7,8,7,7,0,0],
+    breakdown:[{proj:"Internal Tooling",task:"Development",h:28,color:"#F59E0B"},{proj:"Internal Tooling",task:"QA",h:8,color:"#D97706"}],
+  },
+  {
+    id:4, empName:"Sarah Chen", empInitials:"SC", empColor:"#2C5FE4",
+    week:"Feb 24–Mar 2, 2026", projects:["Apollo Rebrand"],
+    totalH:40, submittedAgo:"6 days ago", status:"APPROVED",
+    days:[8,8,8,8,8,0,0],
+    breakdown:[{proj:"Apollo Rebrand",task:"Design",h:40,color:"#2C5FE4"}],
+  },
+];
+
+const AUDIT_TRAIL = [
+  { id:1, ts:"Mar 3, 2026 · 5:01 PM", actor:"Sarah Chen",    role:"Employee",        action:"Submitted timesheet",         comment:null,          color:"#2C5FE4" },
+  { id:2, ts:"Mar 4, 2026 · 9:14 AM", actor:"James Okonkwo", role:"Project Manager", action:"Rejected — returned to employee", comment:"Please break down the Apollo Rebrand hours by sub-task.", color:"#EF4444" },
+  { id:3, ts:"Mar 5, 2026 · 8:47 AM", actor:"Sarah Chen",    role:"Employee",        action:"Resubmitted timesheet",        comment:null,          color:"#2C5FE4" },
+];
+
+const SEED_ROWS = [
+  { id:1, project:"Apollo Rebrand",     hours:["7","8","6","7","4","",""], dayNotes:["Logo revisions","Client presentation","Wireframe review","Feedback iterations","Final handoff","",""] },
+  { id:2, project:"Platform Migration", hours:["6","7","8","5","4","",""], dayNotes:["","API scaffolding","DB migration schema","","Code review","",""]                                    },
+  { id:3, project:"Internal Tooling",   hours:["1","1","1","1","1","",""], dayNotes:["Standup","Standup","Standup","Standup","Standup","",""]                                              },
+];
+
+const REJECTION_SAMPLE = { comment:"Please break down the Apollo Rebrand hours by sub-task.", reviewer:"James Okonkwo", timestamp:"Mar 4, 2026 at 9:14 AM" };
+
+let _tid = 0;
+
+/*────────────────────────────────────────────────
+  ICONS
+────────────────────────────────────────────────*/
+const I = ({ d, s=18, sw=1.5, fill="none", vb="0 0 24 24" }) => (
+  <svg width={s} height={s} viewBox={vb} fill={fill} stroke="currentColor" strokeWidth={sw}
+       strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0,display:"block"}}>
+    {(Array.isArray(d)?d:[d]).map((p,i)=><path key={i} d={p}/>)}
+  </svg>
+);
+
+const Ic = {
+  Dashboard:  ({s=18})=><I s={s} d={["M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z","M9 22V12h6v10"]}/>,
+  Timesheets: ({s=18})=><I s={s} d={["M8 6h13","M8 12h13","M8 18h13","M3 6h.01","M3 12h.01","M3 18h.01"]}/>,
+  Approvals:  ({s=18})=><I s={s} d={["M22 11.08V12a10 10 0 11-5.93-9.14","M22 4L12 14.01l-3-3"]}/>,
+  Reports:    ({s=18})=><I s={s} d={["M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z","M14 2v6h6","M16 13H8","M16 17H8","M10 9H8"]}/>,
+  ChevL:      ({s=16})=><I s={s} d="M15 18l-6-6 6-6"/>,
+  ChevR:      ({s=16})=><I s={s} d="M9 18l6-6-6-6"/>,
+  ChevD:      ({s=14})=><I s={s} d="M6 9l6 6 6-6"/>,
+  Plus:       ({s=16})=><I s={s} d="M12 5v14M5 12h14"/>,
+  Trash:      ({s=15})=><I s={s} d={["M3 6h18","M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"]}/>,
+  FileText:   ({s=15})=><I s={s} d={["M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z","M14 2v6h6","M16 13H8","M16 17H8","M10 9H8"]}/>,
+  Lock:       ({s=15})=><I s={s} d={["M19 11H5a2 2 0 00-2 2v7a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2z","M7 11V7a5 5 0 0110 0v4"]}/>,
+  AlertTri:   ({s=15})=><I s={s} d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01"/>,
+  Check:      ({s=15})=><I s={s} d={["M22 11.08V12a10 10 0 11-5.93-9.14","M22 4L12 14.01l-3-3"]}/>,
+  Clock:      ({s=15})=><I s={s} d={["M12 2a10 10 0 100 20A10 10 0 0012 2z","M12 6v6l4 2"]}/>,
+  Copy:       ({s=15})=><I s={s} d={["M20 9H11a2 2 0 00-2 2v9a2 2 0 002 2h9a2 2 0 002-2v-9a2 2 0 00-2-2z","M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"]}/>,
+  Send:       ({s=15})=><I s={s} d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/>,
+  Save:       ({s=15})=><I s={s} d={["M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z","M17 21v-8H7v8","M7 3v5h8"]}/>,
+  Bell:       ({s=18})=><I s={s} d={["M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9","M13.73 21a2 2 0 01-3.46 0"]}/>,
+  AlertCirc:  ({s=15})=><I s={s} d={["M12 2a10 10 0 100 20A10 10 0 0012 2z","M12 8v4","M12 16h.01"]}/>,
+  ArrowR:     ({s=14})=><I s={s} d="M5 12h14M12 5l7 7-7 7"/>,
+  Pencil:     ({s=14})=><I s={s} d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>,
+  Eye:        ({s=14})=><I s={s} d={["M1 12s4-8 11-8 11 8 11 8","M1 12s4 8 11 8 11-8 11-8","M12 12m-3 0a3 3 0 106 0 3 3 0 00-6 0"]}/>,
+  Filter:     ({s=15})=><I s={s} d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>,
+  SortAsc:    ({s=14})=><I s={s} d="M3 6h18M6 12h12M9 18h6"/>,
+  X:          ({s=14})=><I s={s} d="M18 6L6 18M6 6l12 12"/>,
+  ThumbUp:    ({s=14})=><I s={s} d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/>,
+  ThumbDn:    ({s=14})=><I s={s} d="M10 15v4a3 3 0 003 3l4-9V2H5.72a2 2 0 00-2 1.7l-1.38 9a2 2 0 002 2.3H10zM17 2h2.67A2.31 2.31 0 0122 4v7a2.31 2.31 0 01-2.33 2H17"/>,
+  History:    ({s=15})=><I s={s} d={["M3 12a9 9 0 109.138-9","M3 3v6h6","M12 7v5l3 3"]}/>,
+};
+
+/*────────────────────────────────────────────────
+  HELPERS
+────────────────────────────────────────────────*/
+function sum(a){ return a.reduce((s,v)=>s+(parseFloat(v)||0),0); }
+function rTot(h){ return sum(h); }
+function dTot(rows,i){ return sum(rows.map(r=>r.hours[i]||0)); }
+function gTot(rows){ return sum(rows.map(r=>rTot(r.hours))); }
+function fmtH(n){ return n>0?(n%1===0?n:n.toFixed(1)):"—"; }
+function cH(h){ if(h===0)return "var(--text-muted)"; if(h>10)return "var(--danger)"; if(h>8)return "var(--warning)"; return "var(--success)"; }
+function wkCls(h){ if(h>50)return"h-red"; if(h>=40)return"h-amber"; return"h-green"; }
+
+/*────────────────────────────────────────────────
+  SHARED COMPONENTS
+────────────────────────────────────────────────*/
+function Badge({ s }) {
+  const c = {DRAFT:"badge-draft",SUBMITTED:"badge-submitted",APPROVED:"badge-approved",REJECTED:"badge-rejected",PROCESSED:"badge-processed"};
+  const l = {DRAFT:"Draft",SUBMITTED:"Submitted",APPROVED:"Approved",REJECTED:"Rejected",PROCESSED:"Processed"};
+  return <span className={`badge ${c[s]||"badge-draft"}`}>{l[s]||s}</span>;
+}
+
+function ToastList({ toasts }) {
+  const ic = t => t==="success"?<Ic.Check s={15}/>:t==="error"?<Ic.AlertCirc s={15}/>:t==="warning"?<Ic.AlertTri s={15}/>:<Ic.Clock s={15}/>;
+  const co = t => t==="success"?"var(--success)":t==="error"?"var(--danger)":t==="warning"?"var(--warning)":"var(--primary)";
+  return (
+    <div className="toasts">
+      {toasts.map(t=>(
+        <div key={t.id} className={`toast t-${t.type}`}>
+          <span style={{color:co(t.type),marginTop:1,flexShrink:0}}>{ic(t.type)}</span>
+          <div><div className="t-title">{t.title}</div>{t.msg&&<div className="t-msg">{t.msg}</div>}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Confirm({ open, title, cls, label, onOk, onClose, children }) {
+  if (!open) return null;
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="modal" onClick={e=>e.stopPropagation()}>
+        <div className="modal-hd"><span className="modal-title">{title}</span><button className="modal-x" onClick={onClose}>✕</button></div>
+        <div className="modal-body">{children}</div>
+        <div className="modal-ft">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className={`btn ${cls||"btn-primary"}`} onClick={onOk}>{label}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/*────────────────────────────────────────────────
+  SIDEBAR — adapts to role
+────────────────────────────────────────────────*/
+function Sidebar({ user, activeScreen, onNav }) {
+  const isEmployee = user.role === "Employee";
+  const isPM       = user.role === "Project Manager";
+
+  const empNav = [
+    { id:"dashboard",   label:"Dashboard",  Ic:Ic.Dashboard  },
+    { id:"timesheets",  label:"Timesheets", Ic:Ic.Timesheets },
+    { id:"reports",     label:"Reports",    Ic:Ic.Reports    },
+  ];
+  const pmNav = [
+    { id:"dashboard",   label:"Dashboard",  Ic:Ic.Dashboard  },
+    { id:"timesheets",  label:"Timesheets", Ic:Ic.Timesheets },
+    { id:"approvals",   label:"Approvals",  Ic:Ic.Approvals  },
+    { id:"reports",     label:"Reports",    Ic:Ic.Reports    },
+  ];
+
+  const nav = isEmployee ? empNav : pmNav;
+  const resolvedActive = (activeScreen==="entry") ? "timesheets" : (activeScreen==="review") ? "approvals" : activeScreen;
+
+  return (
+    <aside className="sidebar">
+      <div className="sb-logo">
+        <div className="sb-logo-mark">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <span className="sb-logo-text">time<span className="dot">·</span>track</span>
+      </div>
+      <nav className="sb-nav">
+        <div className="sb-section">Menu</div>
+        {nav.map(({id,label,Ic:NavIc})=>(
+          <div key={id} className={`sb-item${resolvedActive===id?" active":""}`} onClick={()=>onNav(id)}>
+            <NavIc s={17}/>{label}
+          </div>
+        ))}
+      </nav>
+      <div className="sb-footer">
+        <div className="sb-av" style={{background:user.color}}>{user.initials}</div>
+        <div>
+          <div className="sb-name">{user.name}</div>
+          <div className="sb-role">{user.role}</div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+/*════════════════════════════════════════════════
+  SCREEN 3 — APPROVALS INBOX
+════════════════════════════════════════════════*/
+function ApprovalsInbox({ onReview, toastFn }) {
+  const [rows, setRows]         = useState(APPROVALS_DATA);
+  const [statusTab, setStatusTab] = useState("all");
+  const [empFilter, setEmpFilter] = useState("all");
+  const [projFilter, setProjFilter] = useState("all");
+  const [sortKey, setSortKey]   = useState("submitted");
+  const [sortDir, setSortDir]   = useState("asc"); // asc = oldest first
+  const [expanded, setExpanded] = useState(null);
+  const [selected, setSelected] = useState(new Set());
+  const [comments, setComments] = useState({});     // rowId -> comment text
+  const [bulkModal, setBulkModal] = useState(null); // "approve" | "reject"
+  const [bulkComment, setBulkComment] = useState("");
+  const [actionModal, setActionModal] = useState(null); // {type, rowId}
+  const [rejectComment, setRejectComment] = useState("");
+
+  // ── Filtering + sorting ──
+  const filtered = useMemo(() => {
+    let r = rows;
+    if (statusTab === "pending")  r = r.filter(x=>x.status==="SUBMITTED");
+    if (statusTab === "approved") r = r.filter(x=>x.status==="APPROVED");
+    if (statusTab === "rejected") r = r.filter(x=>x.status==="REJECTED");
+    if (empFilter  !== "all") r = r.filter(x=>x.empName===empFilter);
+    if (projFilter !== "all") r = r.filter(x=>x.projects.includes(projFilter));
+
+    r = [...r].sort((a,b) => {
+      let va, vb;
+      if (sortKey==="submitted") { va=a.id; vb=b.id; }       // proxy: lower id = older
+      else if (sortKey==="employee") { va=a.empName; vb=b.empName; }
+      else if (sortKey==="hours")    { va=a.totalH; vb=b.totalH; }
+      else { va=a.id; vb=b.id; }
+      if (typeof va==="string") return sortDir==="asc"?va.localeCompare(vb):vb.localeCompare(va);
+      return sortDir==="asc"?va-vb:vb-va;
+    });
+    return r;
+  }, [rows, statusTab, empFilter, projFilter, sortKey, sortDir]);
+
+  const pendingCount = rows.filter(r=>r.status==="SUBMITTED").length;
+  const selectedArr  = filtered.filter(r=>selected.has(r.id));
+
+  // ── Sort toggle ──
+  const handleSort = (key) => {
+    if (sortKey===key) setSortDir(d=>d==="asc"?"desc":"asc");
+    else { setSortKey(key); setSortDir("asc"); }
+  };
+
+  // ── Select ──
+  const toggleSelect = (id) => setSelected(s=>{ const ns=new Set(s); ns.has(id)?ns.delete(id):ns.add(id); return ns; });
+  const toggleAll    = () => {
+    const ids = filtered.filter(r=>r.status==="SUBMITTED").map(r=>r.id);
+    if (ids.every(id=>selected.has(id))) setSelected(new Set());
+    else setSelected(new Set(ids));
+  };
+  const submittableIds = filtered.filter(r=>r.status==="SUBMITTED").map(r=>r.id);
+  const allSelected    = submittableIds.length>0 && submittableIds.every(id=>selected.has(id));
+
+  // ── Approve / Reject single ──
+  const doApprove = (rowId) => {
+    setRows(p=>p.map(r=>r.id===rowId?{...r,status:"APPROVED"}:r));
+    setSelected(s=>{ const ns=new Set(s); ns.delete(rowId); return ns; });
+    toastFn("success","Timesheet approved","The employee has been notified");
+    setActionModal(null);
+    setExpanded(null);
+  };
+  const doReject = (rowId, comment) => {
+    if (!comment.trim()) { toastFn("warning","Comment required","Please add a rejection reason"); return; }
+    setRows(p=>p.map(r=>r.id===rowId?{...r,status:"REJECTED"}:r));
+    setSelected(s=>{ const ns=new Set(s); ns.delete(rowId); return ns; });
+    toastFn("error","Timesheet rejected","Employee has been notified with your comment");
+    setActionModal(null);
+    setExpanded(null);
+    setComments(c=>({...c,[rowId]:""}));
+  };
+
+  // ── Bulk ──
+  const doBulkApprove = () => {
+    const ids = [...selected];
+    setRows(p=>p.map(r=>ids.includes(r.id)&&r.status==="SUBMITTED"?{...r,status:"APPROVED"}:r));
+    setSelected(new Set());
+    setBulkModal(null);
+    toastFn("success",`${ids.length} timesheets approved`,"All employees have been notified");
+  };
+  const doBulkReject = () => {
+    if (!bulkComment.trim()) { toastFn("warning","Comment required","Required for bulk rejection"); return; }
+    const ids = [...selected];
+    setRows(p=>p.map(r=>ids.includes(r.id)&&r.status==="SUBMITTED"?{...r,status:"REJECTED"}:r));
+    setSelected(new Set());
+    setBulkComment("");
+    setBulkModal(null);
+    toastFn("error",`${ids.length} timesheets rejected`,"Employees notified with your comment");
+  };
+
+  const sortLabel = { submitted:"Date Submitted", employee:"Employee", hours:"Hours" };
+  const empNames  = [...new Set(APPROVALS_DATA.map(r=>r.empName))];
+  const allProjs  = [...new Set(APPROVALS_DATA.flatMap(r=>r.projects))];
+
+  const tabCounts = {
+    all:      rows.length,
+    pending:  rows.filter(r=>r.status==="SUBMITTED").length,
+    approved: rows.filter(r=>r.status==="APPROVED").length,
+    rejected: rows.filter(r=>r.status==="REJECTED").length,
+  };
+
+  return (
+    <div className="main screen-in">
+      {/* ── Page Header ── */}
+      <div className="ap-header">
+        <div>
+          <div className="ap-title-row">
+            <h1 className="ap-title">Approvals</h1>
+            {pendingCount>0&&<span className="badge-count">{pendingCount} pending</span>}
+          </div>
+          <p className="ap-subtitle">Review and approve submitted timesheets from your team</p>
+        </div>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <button className="btn btn-ghost btn-sm"><Ic.Filter s={14}/>Filter</button>
+          <button className="btn btn-ghost btn-sm"><Ic.SortAsc s={14}/>Export</button>
+        </div>
+      </div>
+
+      {/* ── Filter Bar ── */}
+      <div className="filter-bar">
+        <Ic.Filter s={14}/>
+        <select className="filter-select" value={empFilter} onChange={e=>setEmpFilter(e.target.value)}>
+          <option value="all">All Employees</option>
+          {empNames.map(n=><option key={n} value={n}>{n}</option>)}
+        </select>
+        <select className="filter-select" value={projFilter} onChange={e=>setProjFilter(e.target.value)}>
+          <option value="all">All Projects</option>
+          {allProjs.map(p=><option key={p} value={p}>{p}</option>)}
+        </select>
+        <select className="filter-select" style={{minWidth:130}}>
+          <option>All Weeks</option>
+          <option>Mar 3–9, 2026</option>
+          <option>Feb 24–Mar 2, 2026</option>
+        </select>
+        <div className="filter-divider"/>
+        <div className="status-tabs">
+          {[["all","All"],["pending","Pending"],["approved","Approved"],["rejected","Rejected"]].map(([id,lbl])=>(
+            <button key={id} className={`status-tab${statusTab===id?" active":""}`} onClick={()=>setStatusTab(id)}>
+              {lbl}<span className="tab-count">{tabCounts[id]}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Bulk Toolbar ── */}
+      {selected.size>0&&(
+        <div className="bulk-toolbar">
+          <span className="bulk-info">
+            <Ic.Check s={15}/>
+            {selected.size} timesheet{selected.size>1?"s":""} selected
+            <span>{selected.size}</span>
+          </span>
+          <button className="bulk-approve" onClick={()=>setBulkModal("approve")}>
+            <Ic.ThumbUp s={14}/>Approve Selected ({selected.size})
+          </button>
+          <button className="bulk-reject" onClick={()=>setBulkModal("reject")}>
+            <Ic.ThumbDn s={14}/>Reject Selected ({selected.size})
+          </button>
+          <button className="bulk-clear" onClick={()=>setSelected(new Set())} title="Clear selection">
+            <Ic.X s={14}/>
+          </button>
+        </div>
+      )}
+
+      {/* ── Sort Bar ── */}
+      <div className="sort-bar">
+        <span className="sort-label">Sort by:</span>
+        {Object.entries(sortLabel).map(([k,l])=>(
+          <button key={k} className={`sort-btn${sortKey===k?" sorted":""}`} onClick={()=>handleSort(k)}>
+            {l}
+            {sortKey===k&&<span style={{fontSize:10}}>{sortDir==="asc"?"↑":"↓"}</span>}
+          </button>
+        ))}
+        <span style={{marginLeft:"auto",fontSize:12,color:"var(--text-muted)"}}>
+          {filtered.length} result{filtered.length!==1?"s":""}
+        </span>
+      </div>
+
+      {/* ── Table ── */}
+      <div className="ap-table-wrap">
+        <div style={{overflowX:"auto"}}>
+          <table className="ap-table">
+            <thead className="ap-thead">
+              <tr>
+                <th className="th-check">
+                  <input type="checkbox" className="cb" checked={allSelected}
+                    onChange={toggleAll}
+                    title="Select all pending"/>
+                </th>
+                <th>Employee</th>
+                <th>Week</th>
+                <th>Projects</th>
+                <th className="th-center">Hours</th>
+                <th>Submitted</th>
+                <th>Status</th>
+                <th className="th-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={8}>
+                    <div className="empty-state">
+                      <div className="empty-icon"><Ic.Check s={28}/></div>
+                      <div className="empty-title">All caught up!</div>
+                      <div className="empty-sub">No timesheets match your current filters.</div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+              {filtered.map(row=>{
+                const isExpanded = expanded===row.id;
+                const isSel      = selected.has(row.id);
+                const comment    = comments[row.id]||"";
+
+                return (
+                  <React.Fragment key={row.id}>
+                    {/* Main row */}
+                    <tr
+                      className={`ap-row${isExpanded?" expanded":""}${isSel?" selected":""}`}
+                      onClick={()=>setExpanded(isExpanded?null:row.id)}
+                    >
+                      {/* Checkbox */}
+                      <td className="td-check" onClick={e=>e.stopPropagation()}>
+                        {row.status==="SUBMITTED"&&(
+                          <input type="checkbox" className="cb" checked={isSel}
+                            onChange={()=>toggleSelect(row.id)}/>
+                        )}
+                      </td>
+
+                      {/* Employee */}
+                      <td>
+                        <div className="emp-cell">
+                          <div className="emp-av" style={{background:row.empColor}}>{row.empInitials}</div>
+                          <div>
+                            <div className="emp-name" onClick={e=>{e.stopPropagation();onReview(row);}}>
+                              {row.empName}
+                            </div>
+                            <div className="emp-role">Employee</div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Week */}
+                      <td>
+                        <span className="mono" style={{fontSize:13,fontWeight:500}}>{row.week}</span>
+                      </td>
+
+                      {/* Projects */}
+                      <td>
+                        <div className="proj-tags">
+                          {row.projects.map(p=>(
+                            <span key={p} className="proj-tag">{p}</span>
+                          ))}
+                        </div>
+                      </td>
+
+                      {/* Hours */}
+                      <td style={{textAlign:"center"}}>
+                        <span className={`hours-cell ${row.totalH>40?"hours-high":"hours-ok"}`}>
+                          {row.totalH}h
+                        </span>
+                      </td>
+
+                      {/* Submitted */}
+                      <td>
+                        <div className="sub-time">{row.submittedAgo}</div>
+                      </td>
+
+                      {/* Status */}
+                      <td><Badge s={row.status}/></td>
+
+                      {/* Actions */}
+                      <td className="td-actions" onClick={e=>e.stopPropagation()}>
+                        <div className="qa-btns">
+                          {row.status==="SUBMITTED"&&<>
+                            <button className="btn btn-success-soft btn-xs"
+                              onClick={()=>setActionModal({type:"approve",rowId:row.id})}>
+                              <Ic.ThumbUp s={12}/>Approve
+                            </button>
+                            <button className="btn btn-danger-soft btn-xs"
+                              onClick={()=>{setExpanded(row.id);setActionModal(null);}}>
+                              <Ic.ThumbDn s={12}/>Reject
+                            </button>
+                          </>}
+                          {row.status!=="SUBMITTED"&&(
+                            <button className="btn btn-ghost btn-xs" onClick={()=>onReview(row)}>
+                              <Ic.Eye s={12}/>View
+                            </button>
+                          )}
+                          <span style={{color:"var(--text-muted)",display:"flex",alignItems:"center"}}>
+                            <span className={`expand-icon${isExpanded?" open":""}`}><Ic.ChevD s={14}/></span>
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Expanded Detail Row */}
+                    {isExpanded&&(
+                      <tr className="expand-row">
+                        <td colSpan={8}>
+                          <div className="expand-inner">
+
+                            {/* Day breakdown */}
+                            <div className="expand-grid-title">Daily Breakdown</div>
+                            <div className="day-breakdown">
+                              {DAYS.map((d,i)=>{
+                                const h = row.days[i];
+                                const cls = h===0?"zero":h>10?"danger":h>8?"warn":"";
+                                return (
+                                  <div className="day-chip" key={d}>
+                                    <div className="day-chip-label">{d}</div>
+                                    <div className={`day-chip-val ${cls}`}>{h>0?`${h}h`:"—"}</div>
+                                  </div>
+                                );
+                              })}
+                              <div className="day-chip" style={{background:"var(--primary-muted)",borderColor:"var(--primary)",minWidth:72}}>
+                                <div className="day-chip-label" style={{color:"var(--primary)"}}>Total</div>
+                                <div className="day-chip-val" style={{color:"var(--primary)",fontSize:16,fontWeight:700}}>{row.totalH}h</div>
+                              </div>
+                            </div>
+
+                            {/* Project breakdown */}
+                            <div className="expand-grid-title" style={{marginTop:4}}>Project Breakdown</div>
+                            <div className="project-breakdown">
+                              {row.breakdown.map((b,i)=>(
+                                <div className="proj-break-row" key={i}>
+                                  <div className="proj-break-dot" style={{background:b.color}}/>
+                                  <div style={{flex:1}}>
+                                    <div className="proj-break-name">{b.proj}</div>
+                                    <div className="proj-break-task">{b.task}</div>
+                                  </div>
+                                  <span className="proj-break-h">{b.h}h</span>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Comment field (only for SUBMITTED) */}
+                            {row.status==="SUBMITTED"&&(
+                              <div className="comment-area">
+                                <div className="comment-label">Rejection Comment</div>
+                                <textarea
+                                  className="comment-input"
+                                  placeholder="Required if rejecting — explain what needs to be corrected…"
+                                  value={comment}
+                                  onChange={e=>setComments(c=>({...c,[row.id]:e.target.value}))}
+                                />
+                                <div className="expand-actions">
+                                  <button className="btn btn-ghost btn-sm" onClick={()=>setExpanded(null)}>
+                                    Close
+                                  </button>
+                                  <button className="btn btn-success-soft btn-sm"
+                                    onClick={()=>setActionModal({type:"approve",rowId:row.id})}>
+                                    <Ic.ThumbUp s={13}/>Approve Timesheet
+                                  </button>
+                                  <button className="btn btn-danger-soft btn-sm"
+                                    onClick={()=>{
+                                      if (!comment.trim()) { toastFn("warning","Comment required","Please add a rejection reason before rejecting"); return; }
+                                      doReject(row.id, comment);
+                                    }}>
+                                    <Ic.ThumbDn s={13}/>Submit Rejection
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                            {row.status!=="SUBMITTED"&&(
+                              <div className="expand-actions">
+                                <button className="btn btn-ghost btn-sm" onClick={()=>setExpanded(null)}>Close</button>
+                                <button className="btn btn-secondary btn-sm" onClick={()=>onReview(row)}>
+                                  <Ic.Eye s={13}/>Full Review
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ── Approve Single Confirm ── */}
+      <Confirm open={actionModal?.type==="approve"} title="Approve Timesheet"
+               label="Approve" cls="btn-success-soft"
+               onOk={()=>doApprove(actionModal.rowId)} onClose={()=>setActionModal(null)}>
+        <p style={{fontSize:14,color:"var(--text-muted)",lineHeight:1.6,marginBottom:14}}>
+          You're about to approve this timesheet. The period will be locked and the employee notified.
+        </p>
+        {actionModal&&(()=>{
+          const r = rows.find(x=>x.id===actionModal.rowId);
+          return r?(
+            <div style={{background:"var(--surface-2)",borderRadius:8,padding:"12px 16px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                <span style={{fontSize:13,color:"var(--text-muted)"}}>Employee</span>
+                <span style={{fontSize:13,fontWeight:600}}>{r.empName}</span>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                <span style={{fontSize:13,color:"var(--text-muted)"}}>Week</span>
+                <span className="mono" style={{fontSize:13}}>{r.week}</span>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between"}}>
+                <span style={{fontSize:13,color:"var(--text-muted)"}}>Total Hours</span>
+                <span className="mono" style={{fontSize:13,fontWeight:700,color:"var(--success)"}}>{r.totalH}h</span>
+              </div>
+            </div>
+          ):null;
+        })()}
+      </Confirm>
+
+      {/* ── Bulk Approve Confirm ── */}
+      <Confirm open={bulkModal==="approve"} title={`Approve ${selected.size} Timesheets`}
+               label={`Approve ${selected.size}`} cls="btn-success-soft"
+               onOk={doBulkApprove} onClose={()=>setBulkModal(null)}>
+        <p style={{fontSize:14,color:"var(--text-muted)",lineHeight:1.6,marginBottom:14}}>
+          You are about to approve <strong>{selected.size}</strong> timesheets. All periods will be locked.
+        </p>
+        <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:180,overflowY:"auto"}}>
+          {selectedArr.map(r=>(
+            <div key={r.id} style={{display:"flex",justifyContent:"space-between",padding:"8px 12px",background:"var(--surface-2)",borderRadius:7,fontSize:13}}>
+              <span style={{fontWeight:600}}>{r.empName}</span>
+              <span style={{color:"var(--text-muted)"}}>{r.week}</span>
+              <span className="mono" style={{color:"var(--success)",fontWeight:600}}>{r.totalH}h</span>
+            </div>
+          ))}
+        </div>
+      </Confirm>
+
+      {/* ── Bulk Reject Confirm ── */}
+      <Confirm open={bulkModal==="reject"} title={`Reject ${selected.size} Timesheets`}
+               label={`Submit Rejections`} cls="btn-danger-soft"
+               onOk={doBulkReject} onClose={()=>{setBulkModal(null);setBulkComment("");}}>
+        <p style={{fontSize:14,color:"var(--text-muted)",lineHeight:1.6,marginBottom:14}}>
+          The following comment will be sent to <strong>all {selected.size} employees</strong>:
+        </p>
+        <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:120,overflowY:"auto",marginBottom:14}}>
+          {selectedArr.map(r=>(
+            <div key={r.id} style={{display:"flex",justifyContent:"space-between",padding:"7px 12px",background:"rgba(239,68,68,.06)",borderRadius:7,fontSize:13,border:"1px solid rgba(239,68,68,.15)"}}>
+              <span style={{fontWeight:600}}>{r.empName}</span>
+              <span style={{color:"var(--text-muted)"}}>{r.week}</span>
+            </div>
+          ))}
+        </div>
+        <textarea
+          style={{width:"100%",minHeight:80,padding:"10px 14px",border:"1px solid var(--border)",borderRadius:var_r_input,fontFamily:"'DM Sans',sans-serif",fontSize:13,outline:"none",resize:"vertical"}}
+          placeholder="Required: explain what needs to be corrected…"
+          value={bulkComment}
+          onChange={e=>setBulkComment(e.target.value)}
+        />
+        <p style={{fontSize:11,color:"var(--text-muted)",marginTop:8}}>⚠️ This comment will appear in every rejected employee's timesheet.</p>
+      </Confirm>
+    </div>
+  );
+}
+
+// Hacky but needed for the inline style in the bulk reject modal
+const var_r_input = "var(--r-input)";
+
+/*════════════════════════════════════════════════
+  SCREEN 4 — REVIEW SCREEN (single timesheet)
+════════════════════════════════════════════════*/
+function ReviewScreen({ rowData, onBack, toastFn }) {
+  const [status, setStatus]   = useState(rowData.status);
+  const [showReject, setShowReject] = useState(false);
+  const [rejectComment, setRejectComment] = useState("");
+  const [approved, setApproved] = useState(status==="APPROVED");
+
+  const doApprove = () => {
+    setStatus("APPROVED"); setApproved(true); setShowReject(false);
+    toastFn("success","Timesheet approved","Period locked — employee notified");
+  };
+  const doReject = () => {
+    if (!rejectComment.trim()) { toastFn("warning","Comment required","Required for rejection"); return; }
+    setStatus("REJECTED");
+    toastFn("error","Timesheet rejected","Employee notified with your comment");
+    setShowReject(false);
+  };
+
+  const auditItems = [
+    ...AUDIT_TRAIL,
+    ...(status==="APPROVED"?[{id:99,ts:"Mar 5, 2026 · 2:30 PM",actor:"James Okonkwo",role:"Project Manager",action:"Approved timesheet",comment:null,color:"#22C55E"}]:[]),
+    ...(status==="REJECTED"&&rejectComment?[{id:100,ts:"Just now",actor:"James Okonkwo",role:"Project Manager",action:"Rejected — returned to employee",comment:rejectComment,color:"#EF4444"}]:[]),
+  ];
+
+  return (
+    <div className="main screen-in">
+      {/* Back */}
+      <div style={{marginBottom:20}}>
+        <button className="btn btn-ghost btn-sm" onClick={onBack} style={{paddingLeft:8}}>
+          <Ic.ChevL s={14}/>Back to Approvals
+        </button>
+      </div>
+
+      {/* Review Header */}
+      <div className="review-header">
+        <div className="review-emp-block">
+          <div className="review-av" style={{background:rowData.empColor}}>{rowData.empInitials}</div>
+          <div>
+            <div className="review-name">{rowData.empName}</div>
+            <div className="review-meta">
+              <span className="mono" style={{fontSize:13}}>{rowData.week}</span>
+              <span style={{color:"var(--border)"}}>·</span>
+              <span className="mono" style={{fontSize:13,fontWeight:700,color:rowData.totalH>40?"var(--warning)":"var(--text)"}}>{rowData.totalH}h total</span>
+              <span style={{color:"var(--border)"}}>·</span>
+              <Badge s={status}/>
+            </div>
+          </div>
+        </div>
+        {status==="SUBMITTED"&&(
+          <div className="review-actions">
+            <button className="btn btn-success-soft" onClick={doApprove}>
+              <Ic.ThumbUp s={14}/>Approve
+            </button>
+            <button className="btn btn-danger-soft" onClick={()=>setShowReject(s=>!s)}>
+              <Ic.ThumbDn s={14}/>{showReject?"Cancel":"Reject"}
+            </button>
+          </div>
+        )}
+        {status==="APPROVED"&&(
+          <div style={{display:"flex",alignItems:"center",gap:8,color:"var(--success)",fontWeight:600,fontSize:14}}>
+            <Ic.Check s={16}/>Approved by you
+          </div>
+        )}
+      </div>
+
+      {/* Reject Form */}
+      {showReject&&(
+        <div className="reject-form" style={{marginBottom:20,animation:"expandIn 180ms ease"}}>
+          <div className="reject-form-title"><Ic.ThumbDn s={15}/>Rejection Reason</div>
+          <textarea className="notes-ta" style={{width:"100%",minHeight:80}}
+            placeholder="Explain what needs to be corrected. This will be visible to the employee."
+            value={rejectComment} onChange={e=>setRejectComment(e.target.value)}
+          />
+          <div style={{display:"flex",gap:8,marginTop:10,justifyContent:"flex-end"}}>
+            <button className="btn btn-ghost btn-sm" onClick={()=>setShowReject(false)}>Cancel</button>
+            <button className="btn btn-danger-soft btn-sm" onClick={doReject}>Submit Rejection</button>
+          </div>
+        </div>
+      )}
+
+      {/* Day breakdown */}
+      <div className="card" style={{marginBottom:20,padding:20}}>
+        <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".08em",color:"var(--text-muted)",marginBottom:12}}>Daily Breakdown</div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>
+          {DAYS.map((d,i)=>{
+            const h=rowData.days[i];
+            return (
+              <div className="day-chip" key={d} style={{flex:"1 1 60px"}}>
+                <div className="day-chip-label">{d}</div>
+                <div className={`day-chip-val${h===0?" zero":h>10?" danger":h>8?" warn":""}`}>{h>0?`${h}h`:"—"}</div>
+              </div>
+            );
+          })}
+          <div className="day-chip" style={{background:"var(--primary-muted)",borderColor:"var(--primary)",flex:"1 1 72px"}}>
+            <div className="day-chip-label" style={{color:"var(--primary)"}}>Total</div>
+            <div className="day-chip-val" style={{color:"var(--primary)",fontSize:16,fontWeight:700}}>{rowData.totalH}h</div>
+          </div>
+        </div>
+        <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".08em",color:"var(--text-muted)",marginBottom:8}}>Project Breakdown</div>
+        {rowData.breakdown.map((b,i)=>(
+          <div className="proj-break-row" key={i}>
+            <div className="proj-break-dot" style={{background:b.color}}/>
+            <div style={{flex:1}}><div className="proj-break-name">{b.proj}</div><div className="proj-break-task">{b.task}</div></div>
+            <span className="proj-break-h">{b.h}h</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Audit Trail */}
+      <div className="audit-trail">
+        <div className="audit-hd">Audit Trail</div>
+        {auditItems.map((item,idx)=>(
+          <div className="audit-item" key={item.id}>
+            {idx<auditItems.length-1&&<div className="audit-line"/>}
+            <div className="audit-dot" style={{background:item.color}}/>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",alignItems:"baseline",gap:8,flexWrap:"wrap"}}>
+                <span className="audit-actor">{item.actor}</span>
+                <span className="badge badge-draft" style={{fontSize:10,padding:"1px 6px"}}>{item.role}</span>
+              </div>
+              <div className="audit-action">{item.action}</div>
+              {item.comment&&<div className="audit-comment">"{item.comment}"</div>}
+            </div>
+            <div className="audit-ts">{item.ts}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/*════════════════════════════════════════════════
+  SCREEN 2 — EMPLOYEE DASHBOARD
+════════════════════════════════════════════════*/
+const RECENT_TS = [
+  { id:1, range:"Mar 3 – Mar 9, 2026",   h:32, status:"DRAFT",     current:true  },
+  { id:2, range:"Feb 24 – Mar 2, 2026",  h:40, status:"APPROVED"               },
+  { id:3, range:"Feb 17 – Feb 23, 2026", h:38, status:"APPROVED"               },
+  { id:4, range:"Feb 10 – Feb 16, 2026", h:42, status:"PROCESSED"              },
+];
+const PROJ_ACT = [
+  { name:"Apollo Rebrand",     task:"Design",      h:14, color:"#2C5FE4" },
+  { name:"Platform Migration", task:"Development", h:12, color:"#5B8AF5" },
+  { name:"Internal Tooling",   task:"Meetings",    h:6,  color:"#22C55E" },
+];
+
+function EmployeeDashboard({ onGoEntry, toastFn }) {
+  const [copyModal, setCopyModal] = useState(false);
+  const confirmCopy = () => { setCopyModal(false); onGoEntry(); toastFn("success","Rows copied","Hours cleared — enter this week's hours"); };
+
+  return (
+    <div className="main screen-in">
+      <div className="welcome-strip">
+        <div style={{display:"flex",alignItems:"center",gap:16}}>
+          <div className="welcome-av">{EMPLOYEE_USER.initials}</div>
+          <div>
+            <div className="welcome-sub">Good morning 👋</div>
+            <h1 className="welcome-title">Welcome back, <span>{EMPLOYEE_USER.first}</span></h1>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          <button className="btn btn-ghost btn-sm" onClick={()=>setCopyModal(true)}><Ic.Copy s={13}/>Copy Last Week</button>
+          <button className="btn btn-primary" onClick={onGoEntry}><Ic.Pencil s={13}/>Fill Timesheet</button>
+        </div>
+      </div>
+
+      {/* Current week card */}
+      <div className="cwc">
+        <div style={{flex:1,position:"relative",zIndex:1}}>
+          <div className="cwc-label">Current Week</div>
+          <div className="cwc-week">Mar 3 – Mar 9, 2026</div>
+          <div style={{display:"flex",alignItems:"flex-end",gap:12,marginBottom:14}}>
+            <span className="cwc-big">32</span><span className="cwc-unit">hrs logged</span>
+          </div>
+          <div className="cwc-prog">
+            <div className="cwc-track"><div className="cwc-fill" style={{width:`${(32/40)*100}%`}}/></div>
+            <div className="cwc-plabels"><span>0h</span><span>32h / 40h target</span><span>40h</span></div>
+          </div>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:12,flexShrink:0,position:"relative",zIndex:1}}>
+          <div className="cwc-badge">Draft</div>
+          <button className="cwc-cta" onClick={onGoEntry}><Ic.Pencil s={15}/>Submit Timesheet</button>
+          <div style={{fontSize:11,color:"rgba(255,255,255,.45)",textAlign:"right"}}>Last saved<br/><span style={{fontFamily:"'DM Mono',monospace"}}>Today, 10:42 AM</span></div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="stats-grid">
+        {[
+          {label:"This Week",value:"32h",sub:"Mar 3–9, 2026",delta:"-8h",dc:"d-down",acc:"var(--primary)"},
+          {label:"Last Week",value:"40h",sub:"Feb 24–Mar 2",delta:"On target",dc:"d-up",acc:"var(--success)"},
+          {label:"Month Total",value:"72h",sub:"March 2026",delta:"+4h vs Feb",dc:"d-up",acc:"var(--accent)"},
+          {label:"Pending Approvals",value:"0",sub:"All reviewed",delta:"Clear",dc:"d-neu",acc:"var(--text-muted)"},
+        ].map(s=>(
+          <div className="stat-card" key={s.label}>
+            <div className="stat-acc" style={{background:s.acc}}/>
+            <div className="stat-label">{s.label}</div>
+            <div className="stat-val">{s.value}</div>
+            <div className="stat-sub"><span>{s.sub}</span><span className={`delta ${s.dc}`}>{s.delta}</span></div>
+          </div>
+        ))}
+      </div>
+
+      {/* Lower */}
+      <div className="dash-lower">
+        <div className="tbl-card">
+          <div className="tbl-card-hd"><span className="tbl-card-title">Recent Timesheets</span><button className="btn btn-ghost btn-sm" onClick={onGoEntry}>View all <Ic.ArrowR s={13}/></button></div>
+          <table className="rt">
+            <thead><tr><th>Week</th><th>Hours</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              {RECENT_TS.map(ts=>(
+                <tr key={ts.id}>
+                  <td><div style={{fontWeight:600}}>{ts.range}</div>{ts.current&&<div style={{fontSize:11,color:"var(--primary)",fontWeight:600,marginTop:2}}>Current week</div>}</td>
+                  <td><span className="mono" style={{fontSize:15,fontWeight:500}}>{ts.h}h</span></td>
+                  <td><Badge s={ts.status}/></td>
+                  <td><button className="link-btn" onClick={onGoEntry}>{ts.status==="DRAFT"||ts.status==="REJECTED"?"Edit":"View"}</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="side-stack">
+          <div className="side-card">
+            <div className="sc-hd">Quick Actions</div>
+            <div className="sc-body">
+              {[{ic:<Ic.Pencil s={15}/>,lbl:"Fill This Week",sub:"Mar 3–9",bg:"var(--primary-muted)",fn:onGoEntry},{ic:<Ic.Copy s={15}/>,lbl:"Copy Last Week",sub:"Feb 24–Mar 2",bg:"rgba(91,138,245,.12)",fn:()=>setCopyModal(true)},{ic:<Ic.Send s={15}/>,lbl:"Submit for Approval",sub:"32h ready",bg:"rgba(34,197,94,.12)",fn:onGoEntry}].map((a,i)=>(
+                <div className="qa-item" key={i} onClick={a.fn}>
+                  <div className="qa-ic" style={{background:a.bg}}>{a.ic}</div>
+                  <div style={{flex:1}}><div className="qa-lbl">{a.lbl}</div><div className="qa-sub">{a.sub}</div></div>
+                  <Ic.ArrowR s={13}/>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="side-card">
+            <div className="sc-hd">This Week's Projects</div>
+            <div className="sc-body">
+              {PROJ_ACT.map(p=>(
+                <div className="proj-row" key={p.name}>
+                  <div style={{display:"flex",alignItems:"center",gap:10,flex:1,minWidth:0}}>
+                    <div className="proj-dot" style={{background:p.color}}/>
+                    <div><div className="proj-name">{p.name}</div><div className="proj-task">{p.task}</div></div>
+                  </div>
+                  <span className="proj-h">{p.h}h</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Confirm open={copyModal} title="Copy Last Week" label="Copy & Clear Hours" cls="btn-secondary" onOk={confirmCopy} onClose={()=>setCopyModal(false)}>
+        <p style={{fontSize:14,color:"var(--text-muted)",lineHeight:1.6}}>Copy all rows from <strong>Feb 24 – Mar 2, 2026</strong> into your current week. Hours will be cleared.</p>
+      </Confirm>
+    </div>
+  );
+}
+
+/*════════════════════════════════════════════════
+  SCREEN 1 — TIMESHEET ENTRY
+════════════════════════════════════════════════*/
+const WEEKS_LIST = [
+  {label:"Mar 3 – Mar 9, 2026",   dates:["3 Mar","4 Mar","5 Mar","6 Mar","7 Mar","8 Mar","9 Mar"]},
+  {label:"Feb 24 – Mar 2, 2026",  dates:["24 Feb","25 Feb","26 Feb","27 Feb","28 Feb","1 Mar","2 Mar"]},
+  {label:"Feb 17 – Feb 23, 2026", dates:["17 Feb","18 Feb","19 Feb","20 Feb","21 Feb","22 Feb","23 Feb"]},
+];
+
+function TimesheetEntry({ onBack, toastFn }) {
+  const [wkIdx,setWkIdx] = useState(0);
+  const [rows,setRows]   = useState(SEED_ROWS.map(r=>({...r,hours:[...r.hours]})));
+  const [status,setStatus] = useState("DRAFT");
+  const [lastSaved,setLastSaved] = useState("Today at 10:42 AM");
+  const [modal,setModal] = useState(null);
+  const [errors,setErrors] = useState([]);
+  const nId = useRef(20);
+
+  const week    = WEEKS_LIST[wkIdx]||WEEKS_LIST[0];
+  const locked  = status==="APPROVED"||status==="PROCESSED";
+  const subbed  = status==="SUBMITTED";
+  const gt      = gTot(rows);
+
+  const save = () => { const t=new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}); setLastSaved(`Today at ${t}`); toastFn("info","Draft saved",null); };
+  const upH  = (id,di,v) => { if(locked||subbed)return; setRows(p=>p.map(r=>r.id===id?{...r,hours:r.hours.map((h,i)=>i===di?v.replace(/[^0-9.]/g,""):h)}:r)); };
+  const upF  = (id,f,v)  => setRows(p=>p.map(r=>r.id===id?{...r,[f]:v}:r));
+  const upDayNote = (rowId, dayIdx, val) => {
+    setRows(p=>p.map(r=>{
+      if (r.id !== rowId) return r;
+      const dn = [...r.dayNotes]; dn[dayIdx] = val;
+      return { ...r, dayNotes: dn };
+    }));
+  };
+  const addR = () => { const id=nId.current++; setRows(p=>[...p,{id,project:"",hours:Array(7).fill(""),dayNotes:Array(7).fill("")}]); };
+  const remR = id => { if(rows.length<=1){toastFn("warning","Can't remove","At least one row needed");return;} setRows(p=>p.filter(r=>r.id!==id)); };
+  const validate = () => {
+    const e=[];
+    rows.forEach((r,i)=>{if(!r.project)e.push(`Row ${i+1}: Project required`);});
+    if(gt===0)e.push("Enter hours before submitting");
+    if(gt>80) e.push(`Weekly total (${gt.toFixed(1)}h) exceeds 80h`);
+    DAYS.forEach((d,i)=>{const dt=dTot(rows,i);if(dt>12)e.push(`${d}: ${dt}h exceeds 12h daily limit`);});
+    return e;
+  };
+  const handleSubmit = () => { const e=validate(); if(e.length){setErrors(e);return;} setErrors([]); setModal("submit"); };
+  const confirmSub   = () => { setModal(null); setStatus("SUBMITTED"); toastFn("success","Submitted!","James Okonkwo notified"); };
+  const confirmCopy  = () => { setModal(null); setRows(p=>p.map(r=>({...r,id:nId.current++,hours:Array(7).fill(""),dayNotes:Array(7).fill("")}))); toastFn("success","Rows copied","Enter this week's hours"); };
+
+  return (
+    <div className="main screen-in">
+      <div className="pg-header">
+        <div>
+          <button className="btn btn-ghost btn-sm" onClick={onBack} style={{marginBottom:8,paddingLeft:8}}><Ic.ChevL s={14}/>Dashboard</button>
+          <h1 className="pg-title">Weekly Timesheet</h1>
+          <p className="pg-sub">Log your hours for each project and task</p>
+        </div>
+        <div className="hd-actions">
+          <div className="wk-sel">
+            <button className="wk-nav" onClick={()=>setWkIdx(i=>Math.min(WEEKS_LIST.length-1,i+1))}><Ic.ChevL s={15}/></button>
+            <span className="wk-lbl">{week.label}</span>
+            <button className="wk-nav" onClick={()=>setWkIdx(i=>Math.max(0,i-1))} disabled={wkIdx===0}><Ic.ChevR s={15}/></button>
+          </div>
+          {!locked&&!subbed&&<button className="btn btn-ghost" onClick={()=>setModal("copy")}><Ic.Copy s={14}/>Copy Prev Week</button>}
+          {!locked&&!subbed&&<button className="btn btn-secondary" onClick={save}><Ic.Save s={14}/>Save Draft</button>}
+          {!locked&&!subbed&&<button className="btn btn-primary" onClick={handleSubmit}><Ic.Send s={14}/>Submit</button>}
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="st-bar">
+          <div className="st-bar-item"><span style={{color:"var(--text-muted)"}}>Status</span><Badge s={status}/></div>
+          <div className="st-bar-item"><Ic.Clock s={14}/><span>Last saved: {lastSaved}</span></div>
+          <div style={{flex:1}}/>
+          <div className="st-bar-item"><span style={{color:"var(--text-muted)"}}>Week</span><span style={{fontWeight:600,color:"var(--text)"}}>{week.label}</span></div>
+          {locked&&<div className="st-bar-item" style={{color:"var(--success)"}}><Ic.Lock s={14}/><span style={{fontSize:12,fontWeight:600}}>Read-only</span></div>}
+        </div>
+
+        {status==="REJECTED"&&(
+          <div className="reject-callout">
+            <div className="rc-head"><Ic.AlertCirc s={15}/>Timesheet Returned — Action Required</div>
+            <div className="rc-text">"{REJECTION_SAMPLE.comment}"</div>
+            <div className="rc-meta">— {REJECTION_SAMPLE.reviewer}, Project Manager · {REJECTION_SAMPLE.timestamp}</div>
+          </div>
+        )}
+        {locked&&<div className="lock-banner"><Ic.Lock s={15}/>This timesheet is {status.toLowerCase()} and read-only.</div>}
+        {errors.length>0&&(
+          <div className="val-banner">
+            <Ic.AlertTri s={15} style={{flexShrink:0,marginTop:1,color:"var(--danger)"}}/>
+            <div><div style={{fontWeight:600,marginBottom:4,color:"var(--danger)"}}>Fix before submitting:</div>{errors.map((e,i)=><div key={i} style={{fontSize:12,marginBottom:2}}>• {e}</div>)}</div>
+          </div>
+        )}
+
+        <div className="entry-grid">
+          <table className="et">
+            <colgroup>
+              <col className="col-proj"/>
+              {DAYS.map((_,i)=><col key={i} className="col-day"/>)}
+              <col className="col-tot"/>
+              <col className="col-rm"/>
+            </colgroup>
+            <thead className="et-head-sticky">
+              <tr className="et-head-totals">
+                <th className="c-proj" style={{textAlign:"left",paddingLeft:20,fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:"var(--text-muted)"}}>Project</th>
+                {DAYS.map((d,i)=>{
+                  const dt=dTot(rows,i);
+                  return (
+                    <th key={d} className="c-day-h">
+                      <div className="eht-date">{week.dates[i]}</div>
+                      <div className="eht-dow">{d}</div>
+                      <div className="eht-h" style={{color:cH(dt)}}>{dt>0?`${fmtH(dt)}h`:"—"}</div>
+                    </th>
+                  );
+                })}
+                <th className="c-tot-h">
+                  <div className="eht-date" style={{visibility:"hidden"}}>–</div>
+                  <div className="eht-dow">Total</div>
+                  <div className="eht-h" style={{color:wkCls(gt)==="h-red"?"var(--danger)":wkCls(gt)==="h-amber"?"var(--warning)":"var(--success)"}}>{gt>0?fmtH(gt):"0"}h</div>
+                </th>
+                <th className="c-rm-h"/>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(row=>{ const rt=rTot(row.hours); return (
+                <tr className="et-row" key={row.id}>
+                  <td style={{paddingLeft:20,verticalAlign:"middle"}}>
+                    <select className="row-sel" value={row.project} disabled={locked||subbed} onChange={e=>upF(row.id,"project",e.target.value)}>
+                      <option value="">Select project…</option>
+                      {PROJECTS.map(p=><option key={p}>{p}</option>)}
+                    </select>
+                  </td>
+                  {DAYS.map((d,i)=>{ const v=row.hours[i]; const n=parseFloat(v)||0; return (
+                    <td key={d} style={{padding:"10px 5px",verticalAlign:"top"}}>
+                      <div className="day-cell">
+                        <input type="text" inputMode="decimal"
+                          className={`ti${v?" hv":""}${n>10?" dv":n>8?" wn":""}`}
+                          value={v} placeholder="—" disabled={locked||subbed}
+                          onChange={e=>upH(row.id,i,e.target.value)}
+                          onBlur={save}
+                          onKeyDown={e=>{if(e.key==="Enter"||e.key==="Tab")e.target.blur();if(e.key==="Escape"){upH(row.id,i,"");e.target.blur();}}}
+                        />
+                        <textarea
+                          className="day-note-ta"
+                          placeholder="Note…"
+                          value={row.dayNotes[i]}
+                          onChange={e=>upDayNote(row.id,i,e.target.value)}
+                          disabled={locked}
+                        />
+                      </div>
+                    </td>
+                  ); })}
+                  <td style={{verticalAlign:"middle",paddingRight:4}}>
+                    <div className="rt-cell" style={{color:rt===0?"var(--text-muted)":cH(rt)}}>{rt>0?`${fmtH(rt)}h`:"—"}</div>
+                  </td>
+                  <td style={{verticalAlign:"middle",paddingRight:8}}>
+                    {!locked&&!subbed&&<button className="rm-btn" onClick={()=>remR(row.id)}><Ic.Trash s={14}/></button>}
+                  </td>
+                </tr>
+              ); })}
+            </tbody>
+          </table>
+        </div>
+        {!locked&&!subbed&&<div className="add-row-area"><button className="btn btn-ghost btn-sm" onClick={addR}><Ic.Plus s={13}/>Add Row</button></div>}
+      </div>
+
+      <Confirm open={modal==="submit"} title="Submit Timesheet" label="Yes, Submit" onOk={confirmSub} onClose={()=>setModal(null)}>
+        <p style={{fontSize:14,color:"var(--text-muted)",lineHeight:1.6,marginBottom:16}}>Submit <strong>{week.label}</strong> for review?</p>
+        <div style={{background:"var(--surface-2)",borderRadius:8,padding:"12px 16px",marginBottom:12}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:13,color:"var(--text-muted)"}}>Total hours</span><span className="mono" style={{fontSize:14,fontWeight:600,color:cH(gt)}}>{gt.toFixed(1)}h</span></div>
+          <div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontSize:13,color:"var(--text-muted)"}}>Reviewer</span><span style={{fontSize:13,fontWeight:600}}>James Okonkwo</span></div>
+        </div>
+        <p style={{fontSize:12,color:"var(--text-muted)"}}>Editing locked until reviewer acts.</p>
+      </Confirm>
+      <Confirm open={modal==="copy"} title="Copy Previous Week" label="Copy & Clear Hours" cls="btn-secondary" onOk={confirmCopy} onClose={()=>setModal(null)}>
+        <p style={{fontSize:14,color:"var(--text-muted)",lineHeight:1.6}}>Copy rows from <strong>{WEEKS_LIST[Math.min(wkIdx+1,WEEKS_LIST.length-1)].label}</strong>. Hours cleared, current rows replaced.</p>
+      </Confirm>
+    </div>
+  );
+}
+
+/*════════════════════════════════════════════════
+  ROOT APP ROUTER
+════════════════════════════════════════════════*/
+function App() {
+  const [activeUser, setActiveUser] = useState("employee"); // "employee" | "pm"
+  const [screen, setScreen]         = useState("dashboard");
+  const [reviewData, setReviewData] = useState(null);
+  const [toasts, setToasts]         = useState([]);
+
+  const user = activeUser==="employee" ? EMPLOYEE_USER : PM_USER;
+
+  const toast = useCallback((type,title,msg)=>{
+    const id=++_tid; setToasts(p=>[...p,{id,type,title,msg}]);
+    setTimeout(()=>setToasts(p=>p.filter(t=>t.id!==id)),3200);
+  },[]);
+
+  const navTo = useCallback((id)=>{
+    if (id==="dashboard")  setScreen("dashboard");
+    if (id==="timesheets") setScreen("entry");
+    if (id==="approvals")  setScreen("approvals");
+    if (id==="reports")    toast("info","Reports","Reports screen coming soon");
+  },[toast]);
+
+  const goReview = useCallback((rowData)=>{ setReviewData(rowData); setScreen("review"); },[]);
+
+  // Topbar breadcrumb
+  const bcLabels = { dashboard:"Dashboard", entry:"Timesheets · Entry", approvals:"Approvals", review:"Approvals · Review" };
+
+  return (
+    <>
+      <div className="shell">
+        <Sidebar user={user} activeScreen={screen} onNav={navTo}/>
+
+        {/* Topbar */}
+        <header className="topbar">
+          <div className="tb-bc">
+            {screen!=="dashboard"&&(
+              <>
+                <span className="tb-bc-root" onClick={()=>setScreen("dashboard")}>Dashboard</span>
+                <span className="tb-bc-sep">›</span>
+              </>
+            )}
+            <span className="tb-bc-cur">{
+              screen==="dashboard"?"Dashboard":
+              screen==="entry"?"Weekly Timesheet":
+              screen==="approvals"?"Approvals Inbox":
+              screen==="review"?`Review — ${reviewData?.empName}`:"—"
+            }</span>
+          </div>
+          <div className="tb-right">
+            <span className="tb-date">{TODAY}</span>
+            <span className="tb-role-chip">{user.role==="Employee"?"Employee":"PM"}</span>
+            {/* Role switcher for demo */}
+            <button className="btn btn-ghost btn-sm"
+              onClick={()=>{ setActiveUser(u=>u==="employee"?"pm":"employee"); setScreen("dashboard"); }}
+              title="Switch role (demo)">
+              Switch to {activeUser==="employee"?"PM":"Employee"}
+            </button>
+            <button className="tb-icon-btn"><Ic.Bell s={16}/></button>
+          </div>
+        </header>
+
+        {/* Screen router */}
+        {screen==="dashboard" && activeUser==="employee" && <EmployeeDashboard onGoEntry={()=>setScreen("entry")} toastFn={toast}/>}
+        {screen==="dashboard" && activeUser==="pm"       && <ApprovalsInbox onReview={goReview} toastFn={toast}/>}
+        {screen==="entry"     && <TimesheetEntry onBack={()=>setScreen("dashboard")} toastFn={toast}/>}
+        {screen==="approvals" && <ApprovalsInbox onReview={goReview} toastFn={toast}/>}
+        {screen==="review"    && reviewData && <ReviewScreen rowData={reviewData} onBack={()=>setScreen("approvals")} toastFn={toast}/>}
+      </div>
+
+      <ToastList toasts={toasts}/>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
